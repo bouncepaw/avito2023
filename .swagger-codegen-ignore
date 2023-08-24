@@ -1,0 +1,12 @@
+# The generated docs are basically useless
+docs/*
+# I don't need a second Swagger file
+api/*
+# I don't use Travis
+.travis.yml
+# I can use Git myself
+git_push.sh
+# I have my own README.md
+README.md
+
+.gitignore

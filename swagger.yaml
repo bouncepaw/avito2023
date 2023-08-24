@@ -54,7 +54,7 @@ paths:
             required: ["id"]
             properties:
               name:
-                type: number
+                type: integer
               add_to_segments:
                 type: array
                 items:
@@ -79,7 +79,7 @@ paths:
             required: [id]
             properties:
               id:
-                type: number
+                type: integer
       responses:
         200:
           description: Results.
