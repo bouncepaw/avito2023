@@ -5,15 +5,12 @@ info:
     email: "bouncepaw2@ya.ru"
 host: "localhost:5000"
 basePath: "/"
-consumes:
-  - "application/json"
-produces:
-  - "application/json"
-schemes:
-  - "http"
+consumes: ["application/json"]
+produces: ["application/json"]
+schemes: ["http"]
 swagger: "2.0"
 paths:
-  /create-segment:
+  /create_segment:
     post:
       description: Create a new segment.
       parameters:
@@ -30,7 +27,7 @@ paths:
       responses:
         200:
           $ref: '#/responses/segment200'
-  /delete-segment:
+  /delete_segment:
     post:
       description: Delete a segment.
       parameters:
@@ -45,24 +42,63 @@ paths:
           required: true
       responses:
         200:
-          description: "Segment deleted successfully."
-      tags: ["Avito"]
-  /update-user:
+          $ref: '#/responses/segment200'
+  /update_user:
     post:
       description: Update user's segments.
       parameters:
-        - name: "id"
+        - name: "body"
           in: "body"
           schema:
-            type: "number"
+            type: "object"
+            required: ["id"]
+            properties:
+              name:
+                type: number
+              add_to_segments:
+                type: array
+                items:
+                  type: string
+              remove_from_segments:
+                type: array
+                items:
+                  type: string
           required: true
       responses:
         200:
           $ref: '#/responses/segment200'
-definitions: {}
+  /get_segments:
+    post:
+      description: Get segments that the user is part of.
+      parameters:
+        - name: "body"
+          in: "body"
+          required: true
+          schema:
+            type: object
+            required: [id]
+            properties:
+              id:
+                type: number
+      responses:
+        200:
+          description: Results.
+          schema:
+            type: object
+            required: [status]
+            properties:
+              status:
+                type: string
+                enum: [ok, error]
+              error:
+                type: string
+              segments:
+                type: array
+                items:
+                  type: string
 responses:
   segment200:
-    description: Results.
+    description: Result of the operation.
     schema:
       type: "object"
       required: ["status"]
@@ -70,8 +106,15 @@ responses:
         status:
           type: string
           enum: ["ok", "error"]
+          description: |
+            Status of the operation. If `ok`, then the operation went correctly, and you can ignore the `error` field. If `error`, an error occured which is specified in the `error` field.
         error:
           type: string
-  400:
-    description: Bad Request
+          description: |
+            Explanation of the error. Set only if `status` is `error`.
+            
+            Values:
+            * `name taken` means the provided name is taken already and cannot be used for new segments.
+            * `name free` means that no segment with the given name exists.
+            * Other values are internal errors.
 parameters: {}
