@@ -1,0 +1,77 @@
+info:
+  title: "Customer segmentation"
+  version: "1.0.0"
+  contact:
+    email: "bouncepaw2@ya.ru"
+host: "localhost:5000"
+basePath: "/"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+schemes:
+  - "http"
+swagger: "2.0"
+paths:
+  /create-segment:
+    post:
+      description: Create a new segment.
+      parameters:
+        - name: "body"
+          in: "body"
+          schema:
+            type: "object"
+            required: ["name"]
+            properties:
+              name:
+                type: string
+          required: true
+          description: "Name of the new segment you want to create."
+      responses:
+        200:
+          $ref: '#/responses/segment200'
+  /delete-segment:
+    post:
+      description: Delete a segment.
+      parameters:
+        - name: "body"
+          in: "body"
+          schema:
+            type: "object"
+            required: ["name"]
+            properties:
+              name:
+                type: string
+          required: true
+      responses:
+        200:
+          description: "Segment deleted successfully."
+      tags: ["Avito"]
+  /update-user:
+    post:
+      description: Update user's segments.
+      parameters:
+        - name: "id"
+          in: "body"
+          schema:
+            type: "number"
+          required: true
+      responses:
+        200:
+          $ref: '#/responses/segment200'
+definitions: {}
+responses:
+  segment200:
+    description: Results.
+    schema:
+      type: "object"
+      required: ["status"]
+      properties:
+        status:
+          type: string
+          enum: ["ok", "error"]
+        error:
+          type: string
+  400:
+    description: Bad Request
+parameters: {}
