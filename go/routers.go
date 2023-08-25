@@ -51,35 +51,35 @@ var routes = Routes{
 	Route{
 		"Index",
 		"GET",
-		"//",
+		"/",
 		Index,
 	},
 
 	Route{
 		"CreateSegmentPost",
 		strings.ToUpper("Post"),
-		"//create_segment",
+		"/create_segment",
 		CreateSegmentPost,
 	},
 
 	Route{
 		"DeleteSegmentPost",
 		strings.ToUpper("Post"),
-		"//delete_segment",
+		"/delete_segment",
 		DeleteSegmentPost,
 	},
 
 	Route{
 		"GetSegmentsPost",
 		strings.ToUpper("Post"),
-		"//get_segments",
+		"/get_segments",
 		GetSegmentsPost,
 	},
 
 	Route{
 		"UpdateUserPost",
 		strings.ToUpper("Post"),
-		"//update_user",
+		"/update_user",
 		UpdateUserPost,
 	},
 }

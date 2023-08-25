@@ -10,12 +10,47 @@
 package swagger
 
 import (
+	"avito2023/db"
+	"context"
+	"encoding/json"
+	"log"
 	"net/http"
 )
 
 func CreateSegmentPost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
+	var (
+		response InlineResponse200
+		model    CreateSegmentBody
+		decoder  = json.NewDecoder(r.Body)
+		encoder  = json.NewEncoder(w)
+	)
+
+	err := decoder.Decode(&model)
+	if err != nil {
+		response.Status = "error"
+		response.Error_ = err.Error()
+
+		err = encoder.Encode(response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
+	err = db.CreateSegment(context.Background(), model.Name, 0)
+	if err != nil {
+		response.Status = "error"
+		response.Error_ = err.Error()
+
+		err = encoder.Encode(response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 }
 
 func DeleteSegmentPost(w http.ResponseWriter, r *http.Request) {

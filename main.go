@@ -10,6 +10,7 @@
 package main
 
 import (
+	"avito2023/db"
 	"log"
 	"net/http"
 
@@ -24,9 +25,11 @@ import (
 )
 
 func main() {
+	defer db.Close()
 	log.Printf("Server started")
 
 	router := sw.NewRouter()
 
 	log.Fatal(http.ListenAndServe(":8080", router))
+
 }
