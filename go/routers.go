@@ -11,10 +11,8 @@ package swagger
 
 import (
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 type Route struct {
@@ -57,28 +55,28 @@ var routes = Routes{
 
 	Route{
 		"CreateSegmentPost",
-		strings.ToUpper("Post"),
+		"POST",
 		"/create_segment",
 		CreateSegmentPost,
 	},
 
 	Route{
 		"DeleteSegmentPost",
-		strings.ToUpper("Post"),
+		"POST",
 		"/delete_segment",
 		DeleteSegmentPost,
 	},
 
 	Route{
 		"GetSegmentsPost",
-		strings.ToUpper("Post"),
+		"POST",
 		"/get_segments",
 		GetSegmentsPost,
 	},
 
 	Route{
 		"UpdateUserPost",
-		strings.ToUpper("Post"),
+		"POST",
 		"/update_user",
 		UpdateUserPost,
 	},

@@ -84,3 +84,44 @@ func CreateSegment(ctx context.Context, name string, percent uint) error {
 	_, err := db.ExecContext(ctx, q, name, percent)
 	return err
 }
+
+func DeleteSegment(ctx context.Context, name string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Check if segment is actually deletable.
+	const qInfo = `select id, deleted from segments where name = $1;`
+	row := tx.QueryRowContext(ctx, qInfo, name)
+
+	var (
+		id      int
+		deleted bool
+	)
+	err = row.Scan(&id, &deleted)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return errNameFree
+	case err != nil:
+		return err
+	case deleted:
+		return errAlreadyDeleted
+	}
+
+	// OK. We can delete now.
+	const qMarkDeletion = `update segments set deleted = true where id = $1;`
+	_, err = tx.ExecContext(ctx, qMarkDeletion, id)
+	if err != nil {
+		return err
+	}
+
+	const qRemoveUsers = `delete from users_to_segments where segment_id = $1;`
+	_, err = tx.ExecContext(ctx, qRemoveUsers, id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
