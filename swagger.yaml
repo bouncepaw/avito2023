@@ -22,6 +22,16 @@ paths:
             properties:
               name:
                 type: string
+                description: |
+                  Name of a new segment. You cannot use a name that an existing segment or a
+                  segment that was deleted used.
+              percent:
+                type: integer
+                description: |
+                  Probabillity that new known users will also be part of this segment without
+                  explicitly requesting so. Default: 0.
+                minimum: 0
+                maximum: 100
           required: true
           description: "Name of the new segment you want to create."
       responses:
@@ -39,6 +49,8 @@ paths:
             properties:
               name:
                 type: string
+                description: |
+                  Name of the segment to delete.
           required: true
       responses:
         200:
@@ -116,5 +128,6 @@ responses:
             Values:
             * `name taken` means the provided name is taken already and cannot be used for new segments.
             * `name free` means that no segment with the given name exists.
+            * `already deleted` means that the segment is already deleted.
             * Other values are internal errors.
 parameters: {}

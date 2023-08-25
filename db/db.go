@@ -18,8 +18,9 @@ const (
 var (
 	db *sql.DB
 
-	errNameTaken = errors.New("name taken")
-	errNameFree  = errors.New("name free")
+	errNameTaken      = errors.New("name taken")
+	errNameFree       = errors.New("name free")
+	errAlreadyDeleted = errors.New("already deleted")
 )
 
 func init() {

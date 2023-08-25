@@ -10,5 +10,6 @@
 package swagger
 
 type DeleteSegmentBody struct {
+	// Name of the segment to delete.
 	Name string `json:"name"`
 }

@@ -10,5 +10,8 @@
 package swagger
 
 type CreateSegmentBody struct {
+	// Name of a new segment. You cannot use a name that an existing segment or a segment that was deleted used.
 	Name string `json:"name"`
+	// Probabillity that new known users will also be part of this segment without explicitly requesting so. Default: 0.
+	Percent int32 `json:"percent,omitempty"`
 }

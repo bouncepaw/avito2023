@@ -31,5 +31,4 @@ func main() {
 	router := sw.NewRouter()
 
 	log.Fatal(http.ListenAndServe(":8080", router))
-
 }

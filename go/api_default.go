@@ -40,7 +40,7 @@ func CreateSegmentPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.CreateSegment(context.Background(), model.Name, 0)
+	err = db.CreateSegment(context.Background(), model.Name, uint(model.Percent))
 	if err != nil {
 		response.Status = "error"
 		response.Error_ = err.Error()
