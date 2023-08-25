@@ -13,7 +13,8 @@ create table users_to_segments
 (
 	user_id    integer,
 	segment_id integer
-		references segments (id)
+		references segments (id),
+	unique (user_id, segment_id)
 );
 
 create table delayed_removals

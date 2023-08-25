@@ -21,6 +21,7 @@ var (
 	errNameTaken      = errors.New("name taken")
 	errNameFree       = errors.New("name free")
 	errAlreadyDeleted = errors.New("already deleted")
+	errBadPercent     = errors.New("bad percent")
 )
 
 func init() {
@@ -72,6 +73,9 @@ select exists(
 }
 
 func CreateSegment(ctx context.Context, name string, percent uint) error {
+	if percent < 0 || percent > 100 {
+		return errBadPercent
+	}
 	if nameTaken, err := segmentNameTaken(ctx, name); nameTaken {
 		return errNameTaken
 	} else if err != nil {
@@ -121,6 +125,57 @@ func DeleteSegment(ctx context.Context, name string) error {
 	_, err = tx.ExecContext(ctx, qRemoveUsers, id)
 	if err != nil {
 		return err
+	}
+
+	return tx.Commit()
+}
+
+func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	const (
+		qSegmentIdByName   = `select id from segments where name = $1;`
+		qAddToSegment      = `insert into users_to_segments (user_id, segment_id) values ($1, $2);`
+		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
+	)
+
+	var segmentId int
+	for _, name := range addTo {
+		// Get id for name
+		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
+		switch err = row.Scan(&segmentId); {
+		case errors.Is(err, sql.ErrNoRows):
+			return errNameFree
+		case err != nil:
+			return err
+		}
+
+		// Save relation
+		_, err = tx.ExecContext(ctx, qAddToSegment, userId, segmentId)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, name := range removeFrom {
+		// Get id for name
+		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
+		switch err = row.Scan(&segmentId); {
+		case errors.Is(err, sql.ErrNoRows):
+			return errNameFree
+		case err != nil:
+			return err
+		}
+
+		// Save relation
+		_, err = tx.ExecContext(ctx, qRemoveFromSegment, userId, segmentId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit()

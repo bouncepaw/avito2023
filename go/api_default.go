@@ -78,12 +78,32 @@ func DeleteSegmentPost(w http.ResponseWriter, rq *http.Request) {
 	alright(encoder)
 }
 
-func GetSegmentsPost(w http.ResponseWriter, r *http.Request) {
+func GetSegmentsPost(w http.ResponseWriter, rq *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
-func UpdateUserPost(w http.ResponseWriter, r *http.Request) {
+func UpdateUserPost(w http.ResponseWriter, rq *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
+	var (
+		body    UpdateUserBody
+		decoder = json.NewDecoder(rq.Body)
+		encoder = json.NewEncoder(w)
+	)
+
+	err := decoder.Decode(&body)
+	if err != nil {
+		failWithError(err, encoder)
+		return
+	}
+
+	err = db.UpdateUser(context.Background(), int(body.Id), body.AddToSegments, body.RemoveFromSegments)
+	if err != nil {
+		failWithError(err, encoder)
+		return
+	}
+
+	alright(encoder)
 }

@@ -10,9 +10,9 @@
 package swagger
 
 type UpdateUserBody struct {
-	Name int32 `json:"name,omitempty"`
-
+	Id int32 `json:"id"`
+	// Segments to add the user to. Duplicates are ignored.
 	AddToSegments []string `json:"add_to_segments,omitempty"`
-
+	// Segments to remove the user from. Duplicates are ignored.
 	RemoveFromSegments []string `json:"remove_from_segments,omitempty"`
 }
