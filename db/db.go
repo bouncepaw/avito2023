@@ -180,3 +180,36 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 
 	return tx.Commit()
 }
+
+func GetSegments(ctx context.Context, userId int) ([]string, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	const (
+		qSegments = `
+select name from segments
+join users_to_segments uts
+on segments.id = uts.segment_id
+where uts.user_id = $1;
+`
+	)
+
+	segments := []string{}
+	rows, err := tx.QueryContext(ctx, qSegments, userId)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var s string
+		err = rows.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+		segments = append(segments, s)
+	}
+
+	return segments, tx.Commit()
+}

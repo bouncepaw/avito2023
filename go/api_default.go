@@ -20,6 +20,18 @@ func failWithError(err error, encoder *json.Encoder) {
 	}
 }
 
+func failWithGetError(err error, encoder *json.Encoder) {
+	response := InlineResponse2001{
+		Status: "error",
+		Error_: err.Error(),
+	}
+
+	err = encoder.Encode(response)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func alright(encoder *json.Encoder) {
 	response := InlineResponse200{Status: "ok"}
 	err := encoder.Encode(response)
@@ -81,6 +93,29 @@ func DeleteSegmentPost(w http.ResponseWriter, rq *http.Request) {
 func GetSegmentsPost(w http.ResponseWriter, rq *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
+	var (
+		body    GetSegmentsBody
+		decoder = json.NewDecoder(rq.Body)
+		encoder = json.NewEncoder(w)
+	)
+
+	err := decoder.Decode(&body)
+	if err != nil {
+		failWithGetError(err, encoder)
+		return
+	}
+
+	segments, err := db.GetSegments(context.Background(), int(body.Id))
+	if err != nil {
+		failWithGetError(err, encoder)
+		return
+	}
+
+	_ = encoder.Encode(InlineResponse2001{
+		Status:   "ok",
+		Segments: segments,
+	})
 }
 
 func UpdateUserPost(w http.ResponseWriter, rq *http.Request) {
