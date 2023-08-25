@@ -197,7 +197,7 @@ where uts.user_id = $1;
 `
 	)
 
-	segments := []string{}
+	var segments []string
 	rows, err := tx.QueryContext(ctx, qSegments, userId)
 	if err != nil {
 		return nil, err

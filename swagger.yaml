@@ -3,7 +3,7 @@ info:
   version: "1.0.0"
   contact:
     email: "bouncepaw2@ya.ru"
-host: "localhost:5000"
+host: "localhost:8080"
 basePath: "/"
 consumes: ["application/json"]
 produces: ["application/json"]
