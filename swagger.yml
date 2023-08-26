@@ -58,8 +58,12 @@ paths:
   /update_user:
     post:
       description: |
-        Update user's segments. First, the user is added to the specified segments, then
-        removed from the specified segments.
+        Update user's segments. First, the user is added to the specified segments.
+        Then, the user is removed from the specified segments.
+        
+        If TTL is specified, the user is removed from the added segments when the
+        time comes. In case they were removed from any of the segments already,
+        that segment is ignored.
       parameters:
         - name: "body"
           in: "body"
@@ -81,6 +85,12 @@ paths:
                   type: string
                 description: |
                   Segments to remove the user from. Duplicates are ignored.
+              ttl:
+                type: integer
+                description: |
+                  Time to live. Seconds to wait before removing the user from all
+                  the `add_to_segments` segments.
+                minimum: 1
           required: true
       responses:
         200:
@@ -114,6 +124,65 @@ paths:
                 type: array
                 items:
                   type: string
+  /history:
+    post:
+      description: |
+        Get a link to a CSV file that lists operations in the given month.
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required: [year, month]
+            properties:
+              year:
+                type: integer
+                minimum: 2023
+              month:
+                type: integer
+                minimum: 1
+                maximum: 12
+      responses:
+        200:
+          description: Link to file.
+          schema:
+            type: object
+            required: [status]
+            properties:
+              status:
+                type: string
+                enum: [ok, error]
+              error:
+                type: string
+              link:
+                type: string
+                description: Link starts with /. Request the file at the same server.
+    get:
+      description: |
+        CSV file with operations for the given month.
+      produces: [text/csv]
+      parameters:
+        - name: year
+          in: query
+          required: true
+          type: integer
+          minimum: 2023
+        - name: month
+          in: query
+          required: true
+          type: integer
+          minimum: 1
+          maximum: 12
+      responses:
+        200:
+          description: |
+            CSV file separated with semicolons (;). Columns in order:
+            * User ID (integer)
+            * Segment name (string)
+            * Operation (+ for add, - for remove)
+            * Timestamp
+
 responses:
   segment200:
     description: Result of the operation.

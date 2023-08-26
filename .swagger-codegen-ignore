@@ -11,6 +11,4 @@ README.md
 
 .gitignore
 
-go/api_default.go
-go/routers.go
 main.go

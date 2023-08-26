@@ -15,4 +15,6 @@ type UpdateUserBody struct {
 	AddToSegments []string `json:"add_to_segments,omitempty"`
 	// Segments to remove the user from. Duplicates are ignored.
 	RemoveFromSegments []string `json:"remove_from_segments,omitempty"`
+	// Time to live. Seconds to wait before removing the user from all the `add_to_segments` segments.
+	Ttl int32 `json:"ttl,omitempty"`
 }

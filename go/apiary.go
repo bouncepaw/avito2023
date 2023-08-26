@@ -142,3 +142,13 @@ func UpdateUserPost(w http.ResponseWriter, rq *http.Request) {
 
 	alright(encoder)
 }
+
+func HistoryGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/csv; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
+
+func HistoryPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}

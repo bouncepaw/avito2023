@@ -80,4 +80,18 @@ var routes = Routes{
 		"/update_user",
 		UpdateUserPost,
 	},
+
+	Route{
+		"HistoryGet",
+		"GET",
+		"/history",
+		HistoryGet,
+	},
+
+	Route{
+		"HistoryPost",
+		"POST",
+		"/history",
+		HistoryPost,
+	},
 }

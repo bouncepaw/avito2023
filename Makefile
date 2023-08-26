@@ -8,4 +8,4 @@ clear:
 	docker compose -f docker-compose.yml down --volumes
 
 swagger:
-	swagger-codegen generate -i swagger.yaml -l go-server -o .
+	swagger-codegen generate -i swagger.yml -l go-server -o .
