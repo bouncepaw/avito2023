@@ -14,7 +14,7 @@ const host = "http://localhost:8080/"
 
 var client = &http.Client{}
 
-func send[T any](path string, payload any) T {
+func post[T any](path string, payload any) T {
 	b, err := json.Marshal(payload)
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func send[T any](path string, payload any) T {
 }
 
 func yesbut[T any](path string, payload any, expect T) (T, bool) {
-	response := send[T](path, payload)
+	response := post[T](path, payload)
 	return response, reflect.DeepEqual(response, expect)
 }
 
@@ -142,6 +142,36 @@ func testGetSegments(t *testing.T) {
 	}
 }
 
+func testHistoryPost(t *testing.T) {
+	table := []struct {
+		payload          swagger.HistoryBody
+		expectedResponse swagger.InlineResponse2002
+	}{
+		{
+			swagger.HistoryBody{1000, 1},
+			swagger.InlineResponse2002{Status: "error", Error_: "bad time"},
+		},
+		{
+			swagger.HistoryBody{2024, 13},
+			swagger.InlineResponse2002{Status: "error", Error_: "bad time"},
+		},
+		{
+			swagger.HistoryBody{2023, 6},
+			swagger.InlineResponse2002{Status: "ok", Link: "/history?year=2023&month=6"},
+		},
+		{
+			swagger.HistoryBody{2023, 10},
+			swagger.InlineResponse2002{Status: "ok", Link: "/history?year=2023&month=10"},
+		},
+	}
+	for i, test := range table {
+		response, ok := yesbut("history", test.payload, test.expectedResponse)
+		if !ok {
+			t.Errorf("Failed test %d: got %q instead of %q", i, response, test.expectedResponse)
+		}
+	}
+}
+
 // I did not call it TestMain because that name has additional connotations.
 func TestAPI(t *testing.T) {
 	go main()
@@ -150,4 +180,5 @@ func TestAPI(t *testing.T) {
 	testDeleteSegment(t)
 	testUpdateUser(t)
 	testGetSegments(t)
+	testHistoryPost(t)
 }

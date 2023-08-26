@@ -155,9 +155,16 @@ paths:
                 enum: [ok, error]
               error:
                 type: string
+                description: |
+                  Set if `status` is `error`. Possible values:
+                  
+                  * `bad time` means the year or month you passed is invalid in general.
+                  * Other values are internal or parsing errors.
               link:
                 type: string
-                description: Link starts with /. Request the file at the same server.
+                description: |
+                  If `status` is `ok`, link starts with /. Request the file at the same server.
+                  If `error`, this string is empty.
     get:
       description: |
         CSV file with operations for the given month.
@@ -182,6 +189,10 @@ paths:
             * Segment name (string)
             * Operation (+ for add, - for remove)
             * Timestamp
+        404:
+          description: File not found.
+        500:
+          description: Internal server error.
 
 responses:
   segment200:
@@ -205,5 +216,5 @@ responses:
             * `name free` means that no segment with the given name exists.
             * `already deleted` means that the segment is already deleted.
             * `bad percent` means the passed percent value is outside of 0..100 range.
-            * Other values are internal errors.
+            * Other values are internal or parsing errors.
 parameters: {}

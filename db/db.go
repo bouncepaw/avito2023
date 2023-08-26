@@ -216,3 +216,7 @@ where uts.user_id = $1;
 
 	return segments, tx.Commit()
 }
+
+func GetHistory(ctx context.Context, year, month int) (string, error) {
+	panic("unimplemented")
+}
