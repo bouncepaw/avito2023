@@ -11,12 +11,12 @@
 
 ## Как прогнать тесты
 ```shell
-docker compose --profile test up --exit-code-from test
+docker compose down --volumes && docker compose --profile test up --exit-code-from test --abort-on-container-exit --force-recreate
 ```
 
 ## Как запустить сервер
 ```shell
-docker compose --profile run up
+docker compose --profile run up --force-recreate
 ```
 
 Откройте [localhost:8080](http://localhost:8080).

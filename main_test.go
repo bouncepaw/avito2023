@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -32,11 +33,75 @@ func send[T any](path string, payload any) T {
 	return answer
 }
 
+func yesbut[T any](path string, payload any, expect T) (T, bool) {
+	response := send[T](path, payload)
+	return response, reflect.DeepEqual(response, expect)
+}
+
+func testCreateSegment(t *testing.T) {
+	table := []struct {
+		payload          swagger.CreateSegmentBody
+		expectedResponse swagger.InlineResponse200
+	}{
+		{
+			swagger.CreateSegmentBody{Name: "segment 1"},
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		{
+			swagger.CreateSegmentBody{Name: "segment 2", Percent: 30},
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		{
+			swagger.CreateSegmentBody{Name: "segment 1"},
+			swagger.InlineResponse200{Status: "error", Error_: "name taken"},
+		},
+		{
+			swagger.CreateSegmentBody{Name: "segment to delete 1"},
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		{
+			swagger.CreateSegmentBody{Name: "quarnishone", Percent: 123},
+			swagger.InlineResponse200{Status: "error", Error_: "bad percent"},
+		},
+	}
+	for i, test := range table {
+		response, ok := yesbut("create_segment", test.payload, test.expectedResponse)
+		if !ok {
+			t.Errorf("Failed test %d: got %q instead of %q", i, response, test.expectedResponse)
+		}
+	}
+}
+
+func testDeleteSegment(t *testing.T) {
+	table := []struct {
+		payload          swagger.DeleteSegmentBody
+		expectedResponse swagger.InlineResponse200
+	}{
+		{
+			swagger.DeleteSegmentBody{Name: "segment to delete 1"},
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		{
+			swagger.DeleteSegmentBody{Name: "segment to delete 1"},
+			swagger.InlineResponse200{Status: "error", Error_: "already deleted"},
+		},
+		{
+			swagger.DeleteSegmentBody{Name: "quasimodo"},
+			swagger.InlineResponse200{Status: "error", Error_: "name free"},
+		},
+	}
+	for i, test := range table {
+		response, ok := yesbut("delete_segment", test.payload, test.expectedResponse)
+		if !ok {
+			t.Errorf("Failed test %d: got %q instead of %q", i, response, test.expectedResponse)
+		}
+	}
+}
+
 // I did not call it TestMain because that name has additional connotations.
 func TestAPI(t *testing.T) {
 	go main()
 	time.Sleep(200 * time.Millisecond) // Plenty of time for main() to start.
-
-	send[swagger.InlineResponse200]("create_segment", swagger.CreateSegmentBody{Name: "segment 1"})
-	send[swagger.InlineResponse200]("create_segment", swagger.CreateSegmentBody{Name: "segment 2", Percent: 30})
+	testCreateSegment(t)
+	testDeleteSegment(t)
 }
