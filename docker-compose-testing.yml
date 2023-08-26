@@ -1,12 +1,11 @@
 version: '3.8'
 
 services:
-  web:
+
+  test:
     build: .
     ports:
       - "8080:8080"
-    links:
-      - postgres
     volumes:
       - .:/app
     environment:
@@ -14,14 +13,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: go run main.go
+    command: go test .
+
 
   postgres:
     image: postgres:alpine
     ports:
       - "5432:5432"
     volumes:
-      - postgres-db:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_PASSWORD: password
@@ -32,6 +31,3 @@ services:
       interval: 1s
       timeout: 1s
       retries: 5
-
-volumes:
-  postgres-db:

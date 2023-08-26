@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
@@ -149,6 +150,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
 		switch err = row.Scan(&segmentId); {
 		case errors.Is(err, sql.ErrNoRows):
+			log.Printf("Didn't find id for segment %s\n", name)
 			return errNameFree
 		case err != nil:
 			return err
@@ -166,6 +168,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
 		switch err = row.Scan(&segmentId); {
 		case errors.Is(err, sql.ErrNoRows):
+			log.Printf("Didn't find id for segment %s\n", name)
 			return errNameFree
 		case err != nil:
 			return err

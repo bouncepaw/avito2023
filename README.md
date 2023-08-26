@@ -9,14 +9,21 @@
 ## API
 См. `swagger.yaml`.
 
-## Как прогнать тесты
+## Запуск
+
+### Как прогнать тесты
 ```shell
-docker compose down --volumes && docker compose --profile test up --exit-code-from test --abort-on-container-exit --force-recreate
+docker compose -f docker-compose-testing.yml up --force-recreate -V --abort-on-container-exit
 ```
 
-## Как запустить сервер
+### Как запустить сервер
 ```shell
-docker compose --profile run up --force-recreate
+docker compose -f docker-compose.yml up 
 ```
 
 Откройте [localhost:8080](http://localhost:8080).
+
+### Как сбросить базу данных
+```shell
+docker compose -f docker-compose.yml down --volumes
+```
