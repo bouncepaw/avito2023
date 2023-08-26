@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	host   = "localhost"
+	host   = "postgres"
 	port   = 5432
-	dbname = "bouncepaw"
+	dbname = "postgres"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=disable", host, port, dbname)
+	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=postgres sslmode=disable password=password", host, port, dbname)
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {

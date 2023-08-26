@@ -1,14 +1,17 @@
-FROM golang:1.10 AS build
-WORKDIR /go/src
-COPY go ./go
-COPY main.go .
+FROM golang:1.19.0-alpine3.16 AS build
 
-ENV CGO_ENABLED=0
-RUN go get -d -v ./...
+# The /app directory should act as the main application directory
+WORKDIR /app
 
-RUN go build -a -installsuffix cgo -o swagger .
+# Copy the app package and package-lock.json file
+COPY db ./
+COPY go ./
+COPY go.mod ./
+COPY go.sum ./
+COPY main.go ./
+COPY main_test.go ./
 
-FROM scratch AS runtime
-COPY --from=build /go/src/swagger ./
-EXPOSE 8080/tcp
-ENTRYPOINT ["./swagger"]
+EXPOSE 8080
+
+# Start the app using serve command
+CMD [ "serve", "-s", "build" ]
