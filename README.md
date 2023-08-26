@@ -10,20 +10,21 @@
 См. `swagger.yaml`.
 
 ## Запуск
+Требуется Docker.
 
 ### Как прогнать тесты
 ```shell
-docker compose -f docker-compose-testing.yml up --force-recreate -V --abort-on-container-exit
+make test
 ```
 
 ### Как запустить сервер
 ```shell
-docker compose -f docker-compose.yml up 
+make run
 ```
 
 Откройте [localhost:8080](http://localhost:8080).
 
 ### Как сбросить базу данных
 ```shell
-docker compose -f docker-compose.yml down --volumes
+make clear
 ```
