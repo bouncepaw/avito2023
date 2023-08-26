@@ -108,12 +108,12 @@ func testUpdateUser(t *testing.T) {
 			swagger.InlineResponse200{Status: "ok"},
 		},
 		{
-			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{}, RemoveFromSegments: []string{"segment 1"}},
+			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{}, RemoveFromSegments: []string{"segment 2"}},
 			swagger.InlineResponse200{Status: "ok"},
 		},
 	}
 	for i, test := range table {
-		response, ok := yesbut("delete_segment", test.payload, test.expectedResponse)
+		response, ok := yesbut("update_user", test.payload, test.expectedResponse)
 		if !ok {
 			t.Errorf("Failed test %d: got %q instead of %q", i, response, test.expectedResponse)
 		}
@@ -131,7 +131,7 @@ func testGetSegments(t *testing.T) {
 		},
 		{
 			swagger.GetSegmentsBody{Id: 10},
-			swagger.InlineResponse2001{Status: "error", Error_: "name free"},
+			swagger.InlineResponse2001{Status: "ok"},
 		},
 	}
 	for i, test := range table {
