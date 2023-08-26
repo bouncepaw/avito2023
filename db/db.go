@@ -3,9 +3,13 @@ package db
 import (
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -139,9 +143,15 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 	defer tx.Rollback()
 
 	const (
-		qSegmentIdByName   = `select id from segments where name = $1;`
-		qAddToSegment      = `insert into users_to_segments (user_id, segment_id) values ($1, $2);`
-		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
+		qSegmentIdByName = `select id from segments where name = $1;`
+		qAddToSegment    = `
+insert into users_to_segments (user_id, segment_id) values ($1, $2);
+insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');
+`
+		qRemoveFromSegment = `
+delete from users_to_segments where user_id = $1 and segment_id = $2;
+insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');
+`
 	)
 
 	var segmentId int
@@ -218,5 +228,63 @@ where uts.user_id = $1;
 }
 
 func GetHistory(ctx context.Context, year, month int) (string, error) {
-	panic("unimplemented")
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	// The first moment of the given month and the first moment
+	// of the month after the given one.
+	thisMonth := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	var nextMonth time.Time
+	if month == 12 {
+		nextMonth = time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC)
+	} else {
+		nextMonth = time.Date(year, time.Month(month+1), 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	const qHistory = `
+select stamp, user_id, segments.name, operation
+from operation_history
+join segments on segment_id = id
+where segment_id = segments.id;
+`
+	rows, err := tx.QueryContext(ctx, qHistory, thisMonth, nextMonth)
+	if err != nil {
+		return "", err
+	}
+
+	var (
+		buf    strings.Builder
+		csvDoc = csv.NewWriter(&buf)
+	)
+	csvDoc.Comma = ';'
+
+	for rows.Next() {
+		var (
+			stamp       time.Time
+			userId      int
+			segmentName string
+			operation   string
+		)
+
+		err = rows.Scan(&stamp, &userId, &segmentName, &operation)
+		if err != nil {
+			return "", err
+		}
+
+		// See swagger.yml to learn about field order.
+		err = csvDoc.Write([]string{
+			strconv.Itoa(userId),
+			segmentName,
+			operation,
+			stamp.String(),
+		})
+		if err != nil {
+			return "", err
+		}
+	}
+	csvDoc.Flush()
+	return buf.String(), nil
 }

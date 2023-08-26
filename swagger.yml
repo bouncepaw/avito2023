@@ -127,7 +127,7 @@ paths:
   /history:
     post:
       description: |
-        Get a link to a CSV file that lists operations in the given month.
+        Get a link to a CSV file that lists operations in the given month. Timezone is UTC.
       parameters:
         - name: body
           in: body
@@ -187,7 +187,7 @@ paths:
             CSV file separated with semicolons (;). Columns in order:
             * User ID (integer)
             * Segment name (string)
-            * Operation (+ for add, - for remove)
+            * Operation (`add` or `remove`)
             * Timestamp
         404:
           description: File not found.

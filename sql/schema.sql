@@ -29,7 +29,7 @@ create type operation_type as enum ( 'add', 'remove' );
 
 create table operation_history
 (
-	stamp      timestamp,
+	stamp      timestamp with time zone default now(),
 	user_id    integer,
 	segment_id integer
 		references segments (id),
