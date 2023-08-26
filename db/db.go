@@ -44,7 +44,10 @@ func init() {
 }
 
 func Close() {
-	db.Close()
+	err := db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func segmentNameTaken(ctx context.Context, name string) (bool, error) {
@@ -135,6 +138,31 @@ func DeleteSegment(ctx context.Context, name string) error {
 	return tx.Commit()
 }
 
+func removeFromSegmentsByIds(ctx context.Context, userId int, segmentIds []int) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	const (
+		qRemove = `delete from users_to_segments where user_id = $1 and segment_id = any($2);`
+		qRecord = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
+	)
+
+	if _, err = tx.ExecContext(ctx, qRemove, userId, segmentIds); err != nil {
+		return err
+	}
+
+	for _, id := range segmentIds {
+		if _, err = tx.ExecContext(ctx, qRecord, userId, id); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []string) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -143,15 +171,11 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 	defer tx.Rollback()
 
 	const (
-		qSegmentIdByName = `select id from segments where name = $1;`
-		qAddToSegment    = `
-insert into users_to_segments (user_id, segment_id) values ($1, $2);
-insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');
-`
-		qRemoveFromSegment = `
-delete from users_to_segments where user_id = $1 and segment_id = $2;
-insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');
-`
+		qSegmentIdByName   = `select id from segments where name = $1;`
+		qAddToSegment      = `insert into users_to_segments (user_id, segment_id) values ($1, $2);`
+		qRecordAdd         = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');`
+		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
+		qRecordRemove      = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
 	)
 
 	var segmentId int
@@ -167,8 +191,11 @@ insert into operation_history (user_id, segment_id, operation) values ($1, $2, '
 		}
 
 		// Save relation
-		_, err = tx.ExecContext(ctx, qAddToSegment, userId, segmentId)
-		if err != nil {
+		if _, err = tx.ExecContext(ctx, qAddToSegment, userId, segmentId); err != nil {
+			return err
+		}
+
+		if _, err = tx.ExecContext(ctx, qRecordAdd, userId, segmentId); err != nil {
 			return err
 		}
 	}
@@ -185,8 +212,10 @@ insert into operation_history (user_id, segment_id, operation) values ($1, $2, '
 		}
 
 		// Save relation
-		_, err = tx.ExecContext(ctx, qRemoveFromSegment, userId, segmentId)
-		if err != nil {
+		if _, err = tx.ExecContext(ctx, qRemoveFromSegment, userId, segmentId); err != nil {
+			return err
+		}
+		if _, err = tx.ExecContext(ctx, qRecordRemove, userId, segmentId); err != nil {
 			return err
 		}
 	}

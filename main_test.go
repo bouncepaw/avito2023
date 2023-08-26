@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -38,7 +39,7 @@ func yesbut[T any](path string, payload any, expect T) (T, bool) {
 	return response, reflect.DeepEqual(response, expect)
 }
 
-func testCreateSegment(t *testing.T) {
+func TestCreateSegment(t *testing.T) {
 	table := []struct {
 		payload          swagger.CreateSegmentBody
 		expectedResponse swagger.InlineResponse200
@@ -72,7 +73,7 @@ func testCreateSegment(t *testing.T) {
 	}
 }
 
-func testDeleteSegment(t *testing.T) {
+func TestDeleteSegment(t *testing.T) {
 	table := []struct {
 		payload          swagger.DeleteSegmentBody
 		expectedResponse swagger.InlineResponse200
@@ -98,7 +99,7 @@ func testDeleteSegment(t *testing.T) {
 	}
 }
 
-func testUpdateUser(t *testing.T) {
+func TestUpdateUser(t *testing.T) {
 	table := []struct {
 		payload          swagger.UpdateUserBody
 		expectedResponse swagger.InlineResponse200
@@ -120,7 +121,7 @@ func testUpdateUser(t *testing.T) {
 	}
 }
 
-func testGetSegments(t *testing.T) {
+func TestGetSegments(t *testing.T) {
 	table := []struct {
 		payload          swagger.GetSegmentsBody
 		expectedResponse swagger.InlineResponse2001
@@ -142,7 +143,7 @@ func testGetSegments(t *testing.T) {
 	}
 }
 
-func testHistoryPost(t *testing.T) {
+func TestHistoryPost(t *testing.T) {
 	table := []struct {
 		payload          swagger.HistoryBody
 		expectedResponse swagger.InlineResponse2002
@@ -172,13 +173,18 @@ func testHistoryPost(t *testing.T) {
 	}
 }
 
+func TestHistoryGet(t *testing.T) {
+
+}
+
 // I did not call it TestMain because that name has additional connotations.
-func TestAPI(t *testing.T) {
+func TestMain(m *testing.M) {
 	go main()
 	time.Sleep(200 * time.Millisecond) // Plenty of time for main() to start.
-	testCreateSegment(t)
-	testDeleteSegment(t)
-	testUpdateUser(t)
-	testGetSegments(t)
-	testHistoryPost(t)
+	os.Exit(m.Run())
+}
+
+func todayYearMonth() (year int, month int) {
+	t := time.Now()
+	return t.Year(), int(t.Month())
 }
