@@ -53,15 +53,18 @@ func Close() {
 }
 
 func CreateSegment(ctx context.Context, name string, percent uint) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	if percent < 0 || percent > 100 {
 		return errBadPercent
 	}
 
-	// I could've used a transaction for that, but single queries get wrapped
-	// in implicit transactions anyway, so I didn't.
-
-	const q = `insert into segments (name, automatic_percent) values ($1, $2);`
-	_, err := db.ExecContext(ctx, q, name, percent)
+	const qCreate = `insert into segments (name, automatic_percent) values ($1, $2);`
+	_, err = tx.ExecContext(ctx, qCreate, name, percent)
 
 	// When we try to write an existing name, the following error is returned:
 	//     pq: duplicate key value violates unique constraint "segments_name_key"
@@ -69,9 +72,38 @@ func CreateSegment(ctx context.Context, name string, percent uint) error {
 	// free beforehand to make one less round trip.
 	if err != nil && strings.Contains(err.Error(), "duplicate key") {
 		return errNameTaken
+	} else if err != nil {
+		return err
 	}
 
-	return err
+	if percent > 0 {
+		const qRetro = `
+with percented(user_id, percent_rank) as ( -- Get user with percent value
+   select distinct (user_id), percent_rank() over (order by random())
+   from users_to_segments
+), sample as ( -- Get $1 % users according to the percent rank
+   select user_id from percented
+   where percent_rank < ($2 / 100.0) -- .0 required to avoid rounding to zero
+), records_to_write as ( -- Prepare new records for insertion
+	select user_id, segments.id as segment_id
+	from sample
+	join segments on true
+	where segments.name = $1 
+), written_records as ( -- Not all records were written.
+   insert into users_to_segments (user_id, segment_id)
+	select user_id, segment_id
+	from records_to_write
+	on conflict do nothing -- Got an explicit entry like that? Whatever, move on.
+   returning user_id, segment_id
+)
+insert into operation_history (user_id, segment_id, operation)
+select user_id, segment_id, 'add'
+from written_records;
+`
+		_, err = tx.ExecContext(ctx, qRetro, name, percent)
+	}
+
+	return tx.Commit()
 }
 
 func DeleteSegment(ctx context.Context, name string) error {
