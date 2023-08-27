@@ -27,6 +27,8 @@ var (
 	errNameFree       = errors.New("name free")
 	errAlreadyDeleted = errors.New("already deleted")
 	errBadPercent     = errors.New("bad percent")
+
+	optsRO = &sql.TxOptions{ReadOnly: true}
 )
 
 func init() {
@@ -50,50 +52,25 @@ func Close() {
 	}
 }
 
-func segmentNameTaken(ctx context.Context, name string) (bool, error) {
-	const q = `
-select exists(
-	select 1
-	from segments
-	where name = $1 
-);
-`
-
-	rows, err := db.QueryContext(ctx, q, name)
-	if err != nil {
-		return false, err
-	}
-
-	rows.Next()
-	var result bool
-
-	err = rows.Scan(&result)
-	if err != nil {
-		return false, err
-	}
-
-	err = rows.Close()
-	if err != nil {
-		return false, err
-	}
-
-	return result, nil
-}
-
 func CreateSegment(ctx context.Context, name string, percent uint) error {
 	if percent < 0 || percent > 100 {
 		return errBadPercent
 	}
-	if nameTaken, err := segmentNameTaken(ctx, name); nameTaken {
-		return errNameTaken
-	} else if err != nil {
-		return err
-	}
 
-	// The name is free to use, no conflicts.
+	// I could've used a transaction for that, but single queries get wrapped
+	// in implicit transactions anyway, so I didn't.
 
 	const q = `insert into segments (name, automatic_percent) values ($1, $2);`
 	_, err := db.ExecContext(ctx, q, name, percent)
+
+	// When we try to write an existing name, the following error is returned:
+	//     pq: duplicate key value violates unique constraint "segments_name_key"
+	// We parse the error message post factum instead of checking if the name is
+	// free beforehand to make one less round trip.
+	if err != nil && strings.Contains(err.Error(), "duplicate key") {
+		return errNameTaken
+	}
+
 	return err
 }
 
@@ -234,7 +211,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 }
 
 func GetSegments(ctx context.Context, userId int) ([]string, error) {
-	tx, err := db.BeginTx(ctx, nil)
+	tx, err := db.BeginTx(ctx, optsRO)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +244,7 @@ where uts.user_id = $1;
 }
 
 func GetHistory(ctx context.Context, year, month int) (string, error) {
-	tx, err := db.BeginTx(ctx, nil)
+	tx, err := db.BeginTx(ctx, optsRO)
 	if err != nil {
 		return "", err
 	}
