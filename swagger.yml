@@ -1,5 +1,7 @@
 info:
   title: "Customer segmentation"
+  description: |
+    Track experiment segments and which users are part of which segments.
   version: "1.0.0"
   contact:
     email: "bouncepaw2@ya.ru"
@@ -23,17 +25,20 @@ paths:
               name:
                 type: string
                 description: |
-                  Name of a new segment. You cannot use a name that an existing segment or a
-                  segment that was deleted used.
+                  Name of a new segment. You cannot use a name of a currently or previously
+                  existing segment.
               percent:
                 type: integer
                 description: |
                   Probabillity that new known users will also be part of this segment without
                   explicitly requesting so. Default: 0.
+                  
+                  _percent_% previously known users will get assigned to this segment upon this
+                  request. All new known users will be assigned to this segment with _percent_%
+                  probability.
                 minimum: 0
                 maximum: 100
           required: true
-          description: "Name of the new segment you want to create."
       responses:
         200:
           $ref: '#/responses/segment200'
@@ -64,6 +69,8 @@ paths:
         If TTL is specified, the user is removed from the added segments when the
         time comes. In case they were removed from any of the segments already,
         that segment is ignored.
+        
+        The user might get assigned additional segments without your notice.
       parameters:
         - name: "body"
           in: "body"
@@ -217,4 +224,3 @@ responses:
             * `already deleted` means that the segment is already deleted.
             * `bad percent` means the passed percent value is outside of 0..100 range.
             * Other values are internal or parsing errors.
-parameters: {}
