@@ -16,19 +16,16 @@ type removeTask struct {
 	segmentIds []int
 }
 
-var (
-	schedule = make(chan removeTask)
-)
+var schedule = make(chan removeTask)
 
 func init() {
 	go func() {
 		for task := range schedule {
+			log.Println("Received a task in ", task.ttl)
 			go func(task removeTask) {
-				select {
-				case <-time.After(time.Second * time.Duration(task.ttl)):
-					if err := removeFromSegmentsByIds(context.Background(), task.userId, task.segmentIds); err != nil {
-						log.Println(err)
-					}
+				<-time.After(time.Second * time.Duration(task.ttl))
+				if err := removeFromSegmentsByIds(context.Background(), task.userId, task.segmentIds); err != nil {
+					log.Println(err)
 				}
 			}(task)
 		}

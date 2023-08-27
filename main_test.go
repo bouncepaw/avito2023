@@ -112,6 +112,16 @@ func TestUpdateUser(t *testing.T) {
 			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{}, RemoveFromSegments: []string{"segment 2"}},
 			swagger.InlineResponse200{Status: "ok"},
 		},
+		{
+			// This shall perish in a second
+			swagger.UpdateUserBody{Id: 1234, AddToSegments: []string{"segment 1"}, Ttl: 1},
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		{
+			// This shall perish in a second
+			swagger.UpdateUserBody{Id: 12345, AddToSegments: []string{"segment 1", "segment 2"}, Ttl: 1},
+			swagger.InlineResponse200{Status: "ok"},
+		},
 	}
 	for i, test := range table {
 		response, ok := yesbut("update_user", test.payload, test.expectedResponse)
@@ -122,6 +132,7 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestGetSegments(t *testing.T) {
+	<-time.After(time.Second) // Wait for that second before going forward
 	table := []struct {
 		payload          swagger.GetSegmentsBody
 		expectedResponse swagger.InlineResponse2001
@@ -133,6 +144,14 @@ func TestGetSegments(t *testing.T) {
 		{
 			swagger.GetSegmentsBody{Id: 10},
 			swagger.InlineResponse2001{Status: "ok"},
+		},
+		{
+			swagger.GetSegmentsBody{Id: 1234},
+			swagger.InlineResponse2001{Status: "ok"}, // The segment perished after a second
+		},
+		{
+			swagger.GetSegmentsBody{Id: 12345},
+			swagger.InlineResponse2001{Status: "ok"}, // The segment perished after a second
 		},
 	}
 	for i, test := range table {

@@ -146,15 +146,15 @@ func removeFromSegmentsByIds(ctx context.Context, userId int, segmentIds []int) 
 	defer tx.Rollback()
 
 	const (
-		qRemove = `delete from users_to_segments where user_id = $1 and segment_id = any($2);`
+		qRemove = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
 		qRecord = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
 	)
 
-	if _, err = tx.ExecContext(ctx, qRemove, userId, segmentIds); err != nil {
-		return err
-	}
-
 	for _, id := range segmentIds {
+		if _, err = tx.ExecContext(ctx, qRemove, userId, id); err != nil {
+			return err
+		}
+
 		if _, err = tx.ExecContext(ctx, qRecord, userId, id); err != nil {
 			return err
 		}
@@ -163,7 +163,7 @@ func removeFromSegmentsByIds(ctx context.Context, userId int, segmentIds []int) 
 	return tx.Commit()
 }
 
-func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []string) error {
+func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []string, ttl int) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -178,6 +178,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 		qRecordRemove      = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
 	)
 
+	var addToSegmendIds []int
 	var segmentId int
 	for _, name := range addTo {
 		// Get id for name
@@ -189,6 +190,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 		case err != nil:
 			return err
 		}
+		addToSegmendIds = append(addToSegmendIds, segmentId)
 
 		// Save relation
 		if _, err = tx.ExecContext(ctx, qAddToSegment, userId, segmentId); err != nil {
@@ -197,6 +199,14 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 
 		if _, err = tx.ExecContext(ctx, qRecordAdd, userId, segmentId); err != nil {
 			return err
+		}
+	}
+
+	if ttl > 0 {
+		schedule <- removeTask{
+			ttl:        ttl,
+			userId:     userId,
+			segmentIds: addToSegmendIds,
 		}
 	}
 

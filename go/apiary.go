@@ -149,7 +149,7 @@ func UpdateUserPost(w http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
-	err = db.UpdateUser(context.Background(), int(body.Id), body.AddToSegments, body.RemoveFromSegments)
+	err = db.UpdateUser(context.Background(), int(body.Id), body.AddToSegments, body.RemoveFromSegments, int(body.Ttl))
 	if err != nil {
 		failWithError(err, encoder)
 		return
