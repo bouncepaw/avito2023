@@ -4,6 +4,8 @@ import (
 	swagger "avito2023/go"
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"reflect"
@@ -193,7 +195,38 @@ func TestHistoryPost(t *testing.T) {
 }
 
 func TestHistoryGet(t *testing.T) {
+	times := time.Now()
+	todayYear, todayMonth := times.Year(), int(times.Month())
 
+	table := []struct {
+		// We compare line count instead of string equality because timestamps are too much hassle.
+		year, month, status, wantLines int
+	}{
+		// Found empirically. Increment for every new operation in other tests.
+		{todayYear, todayMonth, 200, 10},
+		{2023, 4, 200, 1},
+		{-15, 14, 404, 1},
+	}
+	for i, test := range table {
+		req, err := http.NewRequest(
+			"GET",
+			fmt.Sprintf(`%shistory?year=%d&month=%d`, host, test.year, test.month),
+			http.NoBody)
+		if err != nil {
+			panic(err)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		if linecnt := bytes.Count(b, []byte{'\n'}); linecnt != test.wantLines {
+			t.Errorf("Failed test %d: got %q lines instead of %q. CSV: %s", i, linecnt, test.wantLines, string(b))
+		}
+	}
 }
 
 // I did not call it TestMain because that name has additional connotations.
@@ -201,9 +234,4 @@ func TestMain(m *testing.M) {
 	go main()
 	time.Sleep(200 * time.Millisecond) // Plenty of time for main() to start.
 	os.Exit(m.Run())
-}
-
-func todayYearMonth() (year int, month int) {
-	t := time.Now()
-	return t.Year(), int(t.Month())
 }

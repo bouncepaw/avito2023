@@ -287,7 +287,7 @@ func GetHistory(ctx context.Context, year, month int) (string, error) {
 select stamp, user_id, segments.name, operation
 from operation_history
 join segments on segment_id = id
-where segment_id = segments.id;
+where stamp >= $1 and stamp < $2;
 `
 	rows, err := tx.QueryContext(ctx, qHistory, thisMonth, nextMonth)
 	if err != nil {

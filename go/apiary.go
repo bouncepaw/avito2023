@@ -161,7 +161,7 @@ func UpdateUserPost(w http.ResponseWriter, rq *http.Request) {
 func showErrorStatus(w http.ResponseWriter, statusCode int) {
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(statusCode)
-	_, _ = fmt.Fprintln(w, "404 Not found")
+	_, _ = fmt.Fprintln(w, fmt.Sprintf("%d", statusCode))
 }
 
 func HistoryGet(w http.ResponseWriter, rq *http.Request) {
@@ -177,12 +177,14 @@ func HistoryGet(w http.ResponseWriter, rq *http.Request) {
 
 	csv, err := db.GetHistory(context.Background(), year, month)
 	if err != nil {
+		log.Println(err)
 		showErrorStatus(w, http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/csv; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+	log.Println(csv)
 	_, _ = fmt.Fprintln(w, csv)
 }
 
