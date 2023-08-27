@@ -88,7 +88,7 @@ with percented(user_id, percent_rank) as ( -- Get user with percent value
 	select user_id, segments.id as segment_id
 	from sample
 	join segments on true
-	where segments.name = $1 
+	where segments.name = $1 and segments.deleted = false
 ), written_records as ( -- Not all records were written.
    insert into users_to_segments (user_id, segment_id)
 	select user_id, segment_id
@@ -185,6 +185,25 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 		qRecordAdd         = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');`
 		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
 		qRecordRemove      = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
+		qInfect            = `
+with random_val as (
+   select random() * 100.0 as xi
+), bonus_segments as (
+   select id
+   from segments
+   cross join random_val
+   where deleted = false and xi <= automatic_percent
+), insertions as (
+   insert into users_to_segments (user_id, segment_id)
+   select $1, id
+   from bonus_segments
+   on conflict do nothing 
+   returning segment_id
+)
+insert into operation_history (user_id, segment_id, operation)
+select $1, segment_id, 'add'
+from insertions;
+`
 	)
 
 	var addToSegmendIds []int
@@ -217,6 +236,10 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 			userId:     userId,
 			segmentIds: addToSegmendIds,
 		}
+	}
+
+	if _, err = tx.ExecContext(ctx, qInfect, userId); err != nil {
+		return err
 	}
 
 	for _, name := range removeFrom {

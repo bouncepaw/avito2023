@@ -184,7 +184,6 @@ func HistoryGet(w http.ResponseWriter, rq *http.Request) {
 
 	w.Header().Set("Content-Type", "text/csv; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	log.Println(csv)
 	_, _ = fmt.Fprintln(w, csv)
 }
 
