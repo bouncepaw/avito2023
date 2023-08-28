@@ -85,13 +85,17 @@ paths:
                 items:
                   type: string
                 description: |
-                  Segments to add the user to. Duplicates are ignored.
+                  Segments to add the user to. Duplicates are ignored. For any given
+                  segment, if the user is already part of it, nothing happens and no
+                  error is returned.
               remove_from_segments:
                 type: array
                 items:
                   type: string
                 description: |
-                  Segments to remove the user from. Duplicates are ignored.
+                  Segments to remove the user from. Duplicates are ignored. For any
+                  given segment, if the user is not part of it, nothing happend and
+                  no error is returned.
               ttl:
                 type: integer
                 description: |
