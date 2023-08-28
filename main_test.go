@@ -141,7 +141,11 @@ func TestCreateSegment(t *testing.T) {
 			swagger.InlineResponse200{Status: "error", Error_: "bad percent"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "fifty-fifty", Percent: 50},
+			swagger.CreateSegmentBody{Name: "fifty-fifty", Percent: 50}, // !
+			swagger.InlineResponse200{Status: "ok"},
+		},
+		&TestCreate{
+			swagger.CreateSegmentBody{Name: "hundred", Percent: 100}, // !
 			swagger.InlineResponse200{Status: "ok"},
 		},
 		&TestCreate{
@@ -187,6 +191,11 @@ func TestUpdateUser(t *testing.T) {
 			swagger.UpdateUserBody{Id: 1234, AddToSegments: []string{"segment 1"}, Ttl: 1},
 			swagger.InlineResponse200{Status: "ok"},
 		},
+		&TestGet{
+			swagger.GetSegmentsBody{Id: 1234},
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1", "hundred"}}, // The segment has not yet perished
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
+		},
 		&TestUpdate{
 			// This shall perish in a second
 			swagger.UpdateUserBody{Id: 12345, AddToSegments: []string{"segment 1", "segment 2"}, Ttl: 1},
@@ -202,23 +211,23 @@ func TestGetSegments(t *testing.T) {
 		TestWait(1100), // + 100 ms just in case
 		&TestGet{
 			swagger.GetSegmentsBody{Id: 101},
-			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1"}},
-			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1", "fifty-fifty"}},
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1", "hundred"}},
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
 		},
 		&TestGet{
 			swagger.GetSegmentsBody{Id: 10},
-			swagger.InlineResponse2001{Status: "ok"},
-			swagger.InlineResponse2001{Status: "ok", Segments: []string{"fifty-fifty"}},
+			swagger.InlineResponse2001{Status: "ok"}, // We didn't know of this one before, so not in any segment,
+			swagger.InlineResponse2001{Status: "ok"}, // not even in "hundred".
 		},
 		&TestGet{
 			swagger.GetSegmentsBody{Id: 1234},
-			swagger.InlineResponse2001{Status: "ok"}, // The segment perished after a second
-			swagger.InlineResponse2001{Status: "ok", Segments: []string{"fifty-fifty"}},
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
 		},
 		&TestGet{
 			swagger.GetSegmentsBody{Id: 12345},
-			swagger.InlineResponse2001{Status: "ok"}, // The segment perished after a second
-			swagger.InlineResponse2001{Status: "ok", Segments: []string{"fifty-fifty"}},
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
+			swagger.InlineResponse2001{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
 		},
 	} {
 		test.Test(i+1, t)

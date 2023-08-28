@@ -196,7 +196,7 @@ with random_val as (
    select id
    from segments
    cross join random_val
-   where deleted = false and xi <= automatic_percent
+   where deleted = false and (xi <= automatic_percent or automatic_percent = 100)
 ), insertions as (
    insert into users_to_segments (user_id, segment_id)
    select $1, id
