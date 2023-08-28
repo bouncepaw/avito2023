@@ -234,6 +234,8 @@ func TestGetSegments(t *testing.T) {
 	}
 }
 
+// TODO: Investigate
+
 func TestHistoryPost(t *testing.T) {
 	for i, test := range []Testable{
 		&TestHistory{
@@ -294,7 +296,6 @@ func TestHistoryGet(t *testing.T) {
 	}
 }
 
-// I did not call it TestMain because that name has additional connotations.
 func TestMain(m *testing.M) {
 	go main()
 	time.Sleep(200 * time.Millisecond) // Plenty of time for main() to start.
