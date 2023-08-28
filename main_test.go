@@ -165,7 +165,7 @@ func TestDeleteSegment(t *testing.T) {
 		},
 		&TestDelete{
 			swagger.DeleteSegmentBody{Name: "segment to delete 1"},
-			swagger.ResponseUsual{Status: "error", Error_: "already deleted"},
+			swagger.ResponseUsual{Status: "error", Error_: "segment deleted"},
 		},
 		&TestDelete{
 			swagger.DeleteSegmentBody{Name: "quasimodo"},
@@ -178,6 +178,10 @@ func TestDeleteSegment(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	for i, test := range []Testable{
+		&TestUpdate{
+			swagger.UpdateUserBody{Id: 546, AddToSegments: []string{"segment to delete 1"}},
+			swagger.ResponseUsual{Status: "error", Error_: "segment deleted"},
+		},
 		&TestUpdate{
 			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{"segment 1", "segment 2"}, RemoveFromSegments: []string{}},
 			swagger.ResponseUsual{Status: "ok"},

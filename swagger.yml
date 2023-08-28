@@ -227,6 +227,6 @@ responses:
             * `name empty` means the passed name is an empty string.
             * `name taken` means the provided name is taken already and cannot be used for new segments.
             * `name free` means that no segment with the given name exists.
-            * `already deleted` means that the segment is already deleted.
+            * `segment deleted` means that the segment is segment deleted.
             * `bad percent` means the passed percent value is outside 0..100 range.
             * Other values are internal or parsing errors.

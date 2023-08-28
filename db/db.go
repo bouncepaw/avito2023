@@ -26,7 +26,7 @@ var (
 	errNameEmpty      = errors.New("name empty")
 	errNameTaken      = errors.New("name taken")
 	errNameFree       = errors.New("name free")
-	errAlreadyDeleted = errors.New("already deleted")
+	errSegmentDeleted = errors.New("segment deleted")
 	errBadPercent     = errors.New("bad percent")
 
 	optsRO = &sql.TxOptions{ReadOnly: true}
@@ -132,7 +132,7 @@ func DeleteSegment(ctx context.Context, name string) error {
 	case err != nil:
 		return err
 	case deleted:
-		return errAlreadyDeleted
+		return errSegmentDeleted
 	}
 
 	// OK. We can delete now.
@@ -184,7 +184,7 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 	defer tx.Rollback()
 
 	const (
-		qSegmentIdByName   = `select id from segments where name = $1;`
+		qSegmentIdByName   = `select id, deleted from segments where name = $1;`
 		qAddToSegment      = `insert into users_to_segments (user_id, segment_id) values ($1, $2);`
 		qRecordAdd         = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');`
 		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
@@ -210,17 +210,22 @@ from insertions;
 `
 	)
 
-	var addToSegmendIds []int
-	var segmentId int
+	var (
+		addToSegmendIds []int
+		segmentId       int
+		deleted         bool
+	)
 	for _, name := range addTo {
 		// Get id for name
 		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
-		switch err = row.Scan(&segmentId); {
+		switch err = row.Scan(&segmentId, &deleted); {
 		case errors.Is(err, sql.ErrNoRows):
 			log.Printf("Didn't find id for segment %s\n", name)
 			return errNameFree
 		case err != nil:
 			return err
+		case deleted:
+			return errSegmentDeleted
 		}
 		addToSegmendIds = append(addToSegmendIds, segmentId)
 
@@ -249,12 +254,14 @@ from insertions;
 	for _, name := range removeFrom {
 		// Get id for name
 		row := tx.QueryRowContext(ctx, qSegmentIdByName, name)
-		switch err = row.Scan(&segmentId); {
+		switch err = row.Scan(&segmentId, &deleted); {
 		case errors.Is(err, sql.ErrNoRows):
 			log.Printf("Didn't find id for segment %s\n", name)
 			return errNameFree
 		case err != nil:
 			return err
+		case deleted:
+			return errSegmentDeleted
 		}
 
 		// Save relation
