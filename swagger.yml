@@ -26,7 +26,7 @@ paths:
                 type: string
                 description: |
                   Name of a new segment. You cannot use a name of a currently or previously
-                  existing segment.
+                  existing segment. The name cannot be an empty string.
               percent:
                 type: integer
                 description: |
@@ -223,6 +223,7 @@ responses:
             Explanation of the error. Set only if `status` is `error`.
             
             Values:
+            * `name empty` means the passed name is an empty string.
             * `name taken` means the provided name is taken already and cannot be used for new segments.
             * `name free` means that no segment with the given name exists.
             * `already deleted` means that the segment is already deleted.

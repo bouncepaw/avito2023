@@ -144,6 +144,10 @@ func TestCreateSegment(t *testing.T) {
 			swagger.CreateSegmentBody{Name: "fifty-fifty", Percent: 50},
 			swagger.InlineResponse200{Status: "ok"},
 		},
+		&TestCreate{
+			swagger.CreateSegmentBody{Name: ""},
+			swagger.InlineResponse200{Status: "error", Error_: "name empty"},
+		},
 	} {
 		test.Test(i+1, t)
 	}

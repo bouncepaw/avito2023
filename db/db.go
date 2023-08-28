@@ -23,6 +23,7 @@ const (
 var (
 	db *sql.DB
 
+	errNameEmpty      = errors.New("name empty")
 	errNameTaken      = errors.New("name taken")
 	errNameFree       = errors.New("name free")
 	errAlreadyDeleted = errors.New("already deleted")
@@ -53,6 +54,9 @@ func Close() {
 }
 
 func CreateSegment(ctx context.Context, name string, percent uint) error {
+	if name == "" {
+		return errNameEmpty
+	}
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
