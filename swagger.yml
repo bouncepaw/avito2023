@@ -30,7 +30,7 @@ paths:
               percent:
                 type: integer
                 description: |
-                  Probabillity that new known users will also be part of this segment without
+                  Probability that new known users will also be part of this segment without
                   explicitly requesting so. Default: 0.
                   
                   _percent_% previously known users will get assigned to this segment upon this
@@ -216,7 +216,8 @@ responses:
           type: string
           enum: ["ok", "error"]
           description: |
-            Status of the operation. If `ok`, then the operation went correctly, and you can ignore the `error` field. If `error`, an error occured which is specified in the `error` field.
+            Status of the operation. If `ok`, then the operation went correctly, and you can ignore
+            the `error` field. If `error`, an error occurred which is specified in the `error` field.
         error:
           type: string
           description: |
@@ -227,5 +228,5 @@ responses:
             * `name taken` means the provided name is taken already and cannot be used for new segments.
             * `name free` means that no segment with the given name exists.
             * `already deleted` means that the segment is already deleted.
-            * `bad percent` means the passed percent value is outside of 0..100 range.
+            * `bad percent` means the passed percent value is outside 0..100 range.
             * Other values are internal or parsing errors.

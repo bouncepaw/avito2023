@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	db *sql.DB
+	db *sql.DB // Run `sql/schema.sql` to initialize database.
 
 	errNameEmpty      = errors.New("name empty")
 	errNameTaken      = errors.New("name taken")

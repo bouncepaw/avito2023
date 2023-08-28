@@ -14,7 +14,7 @@ import (
 	"log"
 	"net/http"
 
-	sw "avito2023/go"
+	sw "avito2023/web"
 )
 
 func main() {

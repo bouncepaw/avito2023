@@ -1,4 +1,4 @@
-package swagger
+package web
 
 import (
 	"avito2023/db"
@@ -11,8 +11,12 @@ import (
 	"strconv"
 )
 
+func index(w http.ResponseWriter, rq *http.Request) {
+	_, _ = fmt.Fprintf(w, "Avito!")
+}
+
 func failWithError(err error, encoder *json.Encoder) {
-	response := InlineResponse200{
+	response := ResponseUsual{
 		Status: "error",
 		Error_: err.Error(),
 	}
@@ -24,7 +28,7 @@ func failWithError(err error, encoder *json.Encoder) {
 }
 
 func failWithGetError(err error, encoder *json.Encoder) {
-	response := InlineResponse2001{
+	response := ResponseGetSegments{
 		Status: "error",
 		Error_: err.Error(),
 	}
@@ -36,7 +40,7 @@ func failWithGetError(err error, encoder *json.Encoder) {
 }
 
 func failWithHistoryError(err error, encoder *json.Encoder) {
-	response := InlineResponse2002{
+	response := ResponseHistory{
 		Status: "error",
 		Error_: err.Error(),
 	}
@@ -48,7 +52,7 @@ func failWithHistoryError(err error, encoder *json.Encoder) {
 }
 
 func alright(encoder *json.Encoder) {
-	response := InlineResponse200{Status: "ok"}
+	response := ResponseUsual{Status: "ok"}
 	err := encoder.Encode(response)
 	if err != nil {
 		log.Fatal(err)
@@ -127,7 +131,7 @@ func GetSegmentsPost(w http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
-	_ = encoder.Encode(InlineResponse2001{
+	_ = encoder.Encode(ResponseGetSegments{
 		Status:   "ok",
 		Segments: segments,
 	})
@@ -208,7 +212,7 @@ func HistoryPost(w http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
-	_ = encoder.Encode(InlineResponse2002{
+	_ = encoder.Encode(ResponseHistory{
 		Status: "ok",
 		Link:   fmt.Sprintf("/history?year=%d&month=%d", body.Year, body.Month),
 	})
