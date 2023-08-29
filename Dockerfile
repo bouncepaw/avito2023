@@ -6,4 +6,4 @@ COPY sql ./sql
 COPY web ./web
 
 ENV CGO_ENABLED=0
-RUN go get -d -v ./...
+
