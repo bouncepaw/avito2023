@@ -8,7 +8,7 @@ services:
     links:
       - postgres
     volumes:
-      - .:/app
+      - .:/go/src
     environment:
       CGO_ENABLED: 0
     depends_on:

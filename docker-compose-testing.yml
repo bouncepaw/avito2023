@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - .:/app
+      - .:/go/src
     environment:
       CGO_ENABLED: 0
     depends_on:
