@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	host   = "postgres"
-	port   = 5432
-	dbname = "postgres"
+	host     = "postgres"
+	port     = 5432
+	dbname   = "postgres"
+	user     = "postgres"
+	password = "password"
 )
 
 var (
@@ -33,7 +35,7 @@ var (
 )
 
 func init() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=postgres sslmode=disable password=password", host, port, dbname)
+	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=%s sslmode=disable password=%s", host, port, dbname, user, password)
 	var err error
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
@@ -105,7 +107,9 @@ insert into operation_history (user_id, segment_id, operation)
 select user_id, segment_id, 'add'
 from written_records;
 `
-		_, err = tx.ExecContext(ctx, qRetro, name, percent)
+		if _, err = tx.ExecContext(ctx, qRetro, name, percent); err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit()
@@ -160,12 +164,28 @@ func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []st
 	defer tx.Rollback()
 
 	const (
-		qSegmentIdByName   = `select id, deleted from segments where name = $1;`
-		qAddToSegment      = `insert into users_to_segments (user_id, segment_id) values ($1, $2);`
-		qRecordAdd         = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'add');`
-		qRemoveFromSegment = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
-		qRecordRemove      = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
-		qInfect            = `
+		qSegmentIdByName = `select id, deleted from segments where name = $1;`
+		qAddToSegment    = `
+with insertions as (
+   insert into users_to_segments (user_id, segment_id)
+   values ($1, $2)
+   returning user_id, segment_id
+)
+insert into operation_history (user_id, segment_id, operation)
+select user_id, segment_id, 'add'
+from insertions;
+`
+		qRemoveFromSegment = `
+with deletions as (
+   delete from users_to_segments
+   where user_id = $1 and segment_id = $2
+   returning user_id, segment_id
+)
+insert into operation_history (user_id, segment_id, operation)
+select user_id, segment_id, 'remove'
+from deletions;
+`
+		qInfect = `
 with random_val as (
    select random() * 100.0 as xi
 ), bonus_segments as (
@@ -209,10 +229,6 @@ from insertions;
 		if _, err = tx.ExecContext(ctx, qAddToSegment, userId, segmentId); err != nil {
 			return err
 		}
-
-		if _, err = tx.ExecContext(ctx, qRecordAdd, userId, segmentId); err != nil {
-			return err
-		}
 	}
 
 	if ttl > 0 {
@@ -241,9 +257,6 @@ from insertions;
 
 		// Save relation
 		if _, err = tx.ExecContext(ctx, qRemoveFromSegment, userId, segmentId); err != nil {
-			return err
-		}
-		if _, err = tx.ExecContext(ctx, qRecordRemove, userId, segmentId); err != nil {
 			return err
 		}
 	}

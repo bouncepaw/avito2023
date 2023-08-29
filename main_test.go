@@ -1,7 +1,7 @@
 package main
 
 import (
-	swagger "avito2023/web"
+	"avito2023/web"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -47,8 +47,8 @@ type Testable interface {
 }
 
 type TestCreate struct {
-	swagger.CreateSegmentBody
-	swagger.ResponseUsual
+	web.CreateSegmentBody
+	web.ResponseUsual
 }
 
 func (tc *TestCreate) Test(idx int, t *testing.T) {
@@ -59,8 +59,8 @@ func (tc *TestCreate) Test(idx int, t *testing.T) {
 }
 
 type TestDelete struct {
-	swagger.DeleteSegmentBody
-	swagger.ResponseUsual
+	web.DeleteSegmentBody
+	web.ResponseUsual
 }
 
 func (tc *TestDelete) Test(idx int, t *testing.T) {
@@ -71,8 +71,8 @@ func (tc *TestDelete) Test(idx int, t *testing.T) {
 }
 
 type TestUpdate struct {
-	swagger.UpdateUserBody
-	swagger.ResponseUsual
+	web.UpdateUserBody
+	web.ResponseUsual
 }
 
 func (tc *TestUpdate) Test(idx int, t *testing.T) {
@@ -83,14 +83,13 @@ func (tc *TestUpdate) Test(idx int, t *testing.T) {
 }
 
 type TestGet struct {
-	swagger.GetSegmentsBody
-	possibility1 swagger.ResponseGetSegments
-	possibility2 swagger.ResponseGetSegments
+	web.GetSegmentsBody
+	possibility1 web.ResponseGetSegments
+	possibility2 web.ResponseGetSegments
 }
 
 func (tc *TestGet) Test(idx int, t *testing.T) {
-	var r any = post[swagger.ResponseGetSegments]("get_segments", tc.GetSegmentsBody)
-	response := r.(swagger.ResponseGetSegments)
+	response := post[web.ResponseGetSegments]("get_segments", tc.GetSegmentsBody)
 
 	ok1 := reflect.DeepEqual(response, tc.possibility1)
 	ok2 := reflect.DeepEqual(response, tc.possibility2)
@@ -100,8 +99,8 @@ func (tc *TestGet) Test(idx int, t *testing.T) {
 }
 
 type TestHistory struct {
-	swagger.HistoryBody
-	swagger.ResponseHistory
+	web.HistoryBody
+	web.ResponseHistory
 }
 
 func (tc *TestHistory) Test(idx int, t *testing.T) {
@@ -121,36 +120,36 @@ func (tc TestWait) Test(idx int, t *testing.T) {
 func TestCreateSegment(t *testing.T) {
 	for i, test := range []Testable{
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "segment 1"},
-			swagger.ResponseUsual{Status: "ok"},
+			web.CreateSegmentBody{Name: "segment 1"},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "segment 2"},
-			swagger.ResponseUsual{Status: "ok"},
+			web.CreateSegmentBody{Name: "segment 2"},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "segment 1"},
-			swagger.ResponseUsual{Status: "error", Error_: "name taken"},
+			web.CreateSegmentBody{Name: "segment 1"},
+			web.ResponseUsual{Status: "error", Err: "name taken"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "segment to delete 1"},
-			swagger.ResponseUsual{Status: "ok"},
+			web.CreateSegmentBody{Name: "segment to delete 1"},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "quarnishone", Percent: 123},
-			swagger.ResponseUsual{Status: "error", Error_: "bad percent"},
+			web.CreateSegmentBody{Name: "quarnishone", Percent: 123},
+			web.ResponseUsual{Status: "error", Err: "bad percent"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "fifty-fifty", Percent: 50}, // !
-			swagger.ResponseUsual{Status: "ok"},
+			web.CreateSegmentBody{Name: "fifty-fifty", Percent: 50}, // !
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: "hundred", Percent: 100}, // !
-			swagger.ResponseUsual{Status: "ok"},
+			web.CreateSegmentBody{Name: "hundred", Percent: 100}, // !
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestCreate{
-			swagger.CreateSegmentBody{Name: ""},
-			swagger.ResponseUsual{Status: "error", Error_: "name empty"},
+			web.CreateSegmentBody{Name: ""},
+			web.ResponseUsual{Status: "error", Err: "name empty"},
 		},
 	} {
 		test.Test(i+1, t)
@@ -160,16 +159,16 @@ func TestCreateSegment(t *testing.T) {
 func TestDeleteSegment(t *testing.T) {
 	for i, test := range []Testable{
 		&TestDelete{
-			swagger.DeleteSegmentBody{Name: "segment to delete 1"},
-			swagger.ResponseUsual{Status: "ok"},
+			web.DeleteSegmentBody{Name: "segment to delete 1"},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestDelete{
-			swagger.DeleteSegmentBody{Name: "segment to delete 1"},
-			swagger.ResponseUsual{Status: "error", Error_: "segment deleted"},
+			web.DeleteSegmentBody{Name: "segment to delete 1"},
+			web.ResponseUsual{Status: "error", Err: "segment deleted"},
 		},
 		&TestDelete{
-			swagger.DeleteSegmentBody{Name: "quasimodo"},
-			swagger.ResponseUsual{Status: "error", Error_: "name free"},
+			web.DeleteSegmentBody{Name: "quasimodo"},
+			web.ResponseUsual{Status: "error", Err: "name free"},
 		},
 	} {
 		test.Test(i+1, t)
@@ -179,31 +178,31 @@ func TestDeleteSegment(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	for i, test := range []Testable{
 		&TestUpdate{
-			swagger.UpdateUserBody{Id: 546, AddToSegments: []string{"segment to delete 1"}},
-			swagger.ResponseUsual{Status: "error", Error_: "segment deleted"},
+			web.UpdateUserBody{Id: 546, AddToSegments: []string{"segment to delete 1"}},
+			web.ResponseUsual{Status: "error", Err: "segment deleted"},
 		},
 		&TestUpdate{
-			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{"segment 1", "segment 2"}, RemoveFromSegments: []string{}},
-			swagger.ResponseUsual{Status: "ok"},
+			web.UpdateUserBody{Id: 101, AddToSegments: []string{"segment 1", "segment 2"}, RemoveFromSegments: []string{}},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestUpdate{
-			swagger.UpdateUserBody{Id: 101, AddToSegments: []string{}, RemoveFromSegments: []string{"segment 2"}},
-			swagger.ResponseUsual{Status: "ok"},
+			web.UpdateUserBody{Id: 101, AddToSegments: []string{}, RemoveFromSegments: []string{"segment 2"}},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestUpdate{
 			// This shall perish in a second
-			swagger.UpdateUserBody{Id: 1234, AddToSegments: []string{"segment 1"}, Ttl: 1},
-			swagger.ResponseUsual{Status: "ok"},
+			web.UpdateUserBody{Id: 1234, AddToSegments: []string{"segment 1"}, Ttl: 1},
+			web.ResponseUsual{Status: "ok"},
 		},
 		&TestGet{
-			swagger.GetSegmentsBody{Id: 1234},
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "hundred"}}, // The segment has not yet perished
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
+			web.GetSegmentsBody{Id: 1234},
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "hundred"}}, // The segment has not yet perished
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
 		},
 		&TestUpdate{
 			// This shall perish in a second
-			swagger.UpdateUserBody{Id: 12345, AddToSegments: []string{"segment 1", "segment 2"}, Ttl: 1},
-			swagger.ResponseUsual{Status: "ok"},
+			web.UpdateUserBody{Id: 12345, AddToSegments: []string{"segment 1", "segment 2"}, Ttl: 1},
+			web.ResponseUsual{Status: "ok"},
 		},
 	} {
 		test.Test(i+1, t)
@@ -214,24 +213,24 @@ func TestGetSegments(t *testing.T) {
 	for i, test := range []Testable{
 		TestWait(1100), // + 100 ms just in case
 		&TestGet{
-			swagger.GetSegmentsBody{Id: 101},
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "hundred"}},
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
+			web.GetSegmentsBody{Id: 101},
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "hundred"}},
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"segment 1", "fifty-fifty", "hundred"}},
 		},
 		&TestGet{
-			swagger.GetSegmentsBody{Id: 10},
-			swagger.ResponseGetSegments{Status: "ok"}, // We didn't know of this one before, so not in any segment,
-			swagger.ResponseGetSegments{Status: "ok"}, // not even in "hundred".
+			web.GetSegmentsBody{Id: 10},
+			web.ResponseGetSegments{Status: "ok"}, // We didn't know of this one before, so not in any segment,
+			web.ResponseGetSegments{Status: "ok"}, // not even in "hundred".
 		},
 		&TestGet{
-			swagger.GetSegmentsBody{Id: 1234},
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
+			web.GetSegmentsBody{Id: 1234},
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
 		},
 		&TestGet{
-			swagger.GetSegmentsBody{Id: 12345},
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
-			swagger.ResponseGetSegments{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
+			web.GetSegmentsBody{Id: 12345},
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"hundred"}}, // The segment perished after a second
+			web.ResponseGetSegments{Status: "ok", Segments: []string{"fifty-fifty", "hundred"}},
 		},
 	} {
 		test.Test(i+1, t)
@@ -241,20 +240,20 @@ func TestGetSegments(t *testing.T) {
 func TestHistoryPost(t *testing.T) {
 	for i, test := range []Testable{
 		&TestHistory{
-			swagger.HistoryBody{1000, 1},
-			swagger.ResponseHistory{Status: "error", Error_: "bad time"},
+			web.HistoryBody{1000, 1},
+			web.ResponseHistory{Status: "error", Err: "bad time"},
 		},
 		&TestHistory{
-			swagger.HistoryBody{2024, 13},
-			swagger.ResponseHistory{Status: "error", Error_: "bad time"},
+			web.HistoryBody{2024, 13},
+			web.ResponseHistory{Status: "error", Err: "bad time"},
 		},
 		&TestHistory{
-			swagger.HistoryBody{2023, 6},
-			swagger.ResponseHistory{Status: "ok", Link: "/history?year=2023&month=6"},
+			web.HistoryBody{2023, 6},
+			web.ResponseHistory{Status: "ok", Link: "/history?year=2023&month=6"},
 		},
 		&TestHistory{
-			swagger.HistoryBody{2023, 10},
-			swagger.ResponseHistory{Status: "ok", Link: "/history?year=2023&month=10"},
+			web.HistoryBody{2023, 10},
+			web.ResponseHistory{Status: "ok", Link: "/history?year=2023&month=10"},
 		},
 	} {
 		test.Test(i+1, t)
@@ -266,11 +265,9 @@ func TestHistoryGet(t *testing.T) {
 	todayYear, todayMonth := times.Year(), int(times.Month())
 
 	table := []struct {
-		// We compare line count instead of string equality because timestamps are too much hassle.
 		year, month, status int
 		wantManyLines       bool
 	}{
-		// Found empirically. Increment for every new operation in other tests.
 		{todayYear, todayMonth, 200, false},
 		{2023, 4, 200, true},
 		{-15, 14, 404, true},

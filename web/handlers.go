@@ -18,7 +18,7 @@ func index(w http.ResponseWriter, rq *http.Request) {
 func failWithError(err error, encoder *json.Encoder) {
 	response := ResponseUsual{
 		Status: "error",
-		Error_: err.Error(),
+		Err:    err.Error(),
 	}
 
 	err = encoder.Encode(response)
@@ -30,7 +30,7 @@ func failWithError(err error, encoder *json.Encoder) {
 func failWithGetError(err error, encoder *json.Encoder) {
 	response := ResponseGetSegments{
 		Status: "error",
-		Error_: err.Error(),
+		Err:    err.Error(),
 	}
 
 	err = encoder.Encode(response)
@@ -42,7 +42,7 @@ func failWithGetError(err error, encoder *json.Encoder) {
 func failWithHistoryError(err error, encoder *json.Encoder) {
 	response := ResponseHistory{
 		Status: "error",
-		Error_: err.Error(),
+		Err:    err.Error(),
 	}
 
 	err = encoder.Encode(response)

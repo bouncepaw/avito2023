@@ -28,3 +28,13 @@ type HistoryBody struct {
 
 	Month int32 `json:"month"`
 }
+
+type UpdateUserBody struct {
+	Id int32 `json:"id"`
+	// Segments to add the user to. Duplicates are ignored. For any given segment, if the user is already part of it, nothing happens and no error is returned.
+	AddToSegments []string `json:"add_to_segments,omitempty"`
+	// Segments to remove the user from. Duplicates are ignored. For any given segment, if the user is not part of it, nothing happend and no error is returned.
+	RemoveFromSegments []string `json:"remove_from_segments,omitempty"`
+	// Time to live. Seconds to wait before removing the user from all the `add_to_segments` segments.
+	Ttl int32 `json:"ttl,omitempty"`
+}

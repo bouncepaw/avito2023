@@ -1,4 +1,4 @@
-FROM golang:1.19 AS build
+FROM golang:1.19-alpine AS build
 WORKDIR /go/src
 COPY db ./db
 COPY main.go .

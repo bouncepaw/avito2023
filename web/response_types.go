@@ -15,13 +15,13 @@ type ResponseUsual struct {
 	// * `segment deleted` means that the segment is segment deleted.
 	// * `bad percent` means the passed percent value is outside 0..100 range.
 	//* Other values are internal or parsing errors.
-	Error_ string `json:"error,omitempty"`
+	Err string `json:"error,omitempty"`
 }
 
 type ResponseGetSegments struct {
 	Status string `json:"status"`
 
-	Error_ string `json:"error,omitempty"`
+	Err string `json:"error,omitempty"`
 
 	Segments []string `json:"segments,omitempty"`
 }
@@ -32,19 +32,9 @@ type ResponseHistory struct {
 	// Set if `status` is `error`. Possible values:
 	// * `bad time` means the year or month you passed is invalid in general.
 	// * Other values are internal or parsing errors.
-	Error_ string `json:"error,omitempty"`
+	Err string `json:"error,omitempty"`
 
 	// If `status` is `ok`, link starts with /. Request the file at the same
 	// server. If `error`, this string is empty.
 	Link string `json:"link,omitempty"`
-}
-
-type UpdateUserBody struct {
-	Id int32 `json:"id"`
-	// Segments to add the user to. Duplicates are ignored. For any given segment, if the user is already part of it, nothing happens and no error is returned.
-	AddToSegments []string `json:"add_to_segments,omitempty"`
-	// Segments to remove the user from. Duplicates are ignored. For any given segment, if the user is not part of it, nothing happend and no error is returned.
-	RemoveFromSegments []string `json:"remove_from_segments,omitempty"`
-	// Time to live. Seconds to wait before removing the user from all the `add_to_segments` segments.
-	Ttl int32 `json:"ttl,omitempty"`
 }
