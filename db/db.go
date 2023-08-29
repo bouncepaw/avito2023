@@ -44,6 +44,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	startSchedule()
 }
 
 func Close() {
@@ -151,31 +152,6 @@ func DeleteSegment(ctx context.Context, name string) error {
 	return tx.Commit()
 }
 
-func removeFromSegmentsByIds(ctx context.Context, userId int, segmentIds []int) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	const (
-		qRemove = `delete from users_to_segments where user_id = $1 and segment_id = $2;`
-		qRecord = `insert into operation_history (user_id, segment_id, operation) values ($1, $2, 'remove');`
-	)
-
-	for _, id := range segmentIds {
-		if _, err = tx.ExecContext(ctx, qRemove, userId, id); err != nil {
-			return err
-		}
-
-		if _, err = tx.ExecContext(ctx, qRecord, userId, id); err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit()
-}
-
 func UpdateUser(ctx context.Context, userId int, addTo []string, removeFrom []string, ttl int) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -240,10 +216,9 @@ from insertions;
 	}
 
 	if ttl > 0 {
-		schedule <- removeTask{
-			ttl:        ttl,
-			userId:     userId,
-			segmentIds: addToSegmendIds,
+		err = planRemoval(ctx, tx, ttl, userId, addToSegmendIds...)
+		if err != nil {
+			return err
 		}
 	}
 
