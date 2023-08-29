@@ -238,8 +238,6 @@ func TestGetSegments(t *testing.T) {
 	}
 }
 
-// TODO: Investigate
-
 func TestHistoryPost(t *testing.T) {
 	for i, test := range []Testable{
 		&TestHistory{

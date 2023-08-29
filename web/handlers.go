@@ -201,6 +201,8 @@ func HistoryPost(w http.ResponseWriter, rq *http.Request) {
 		encoder = json.NewEncoder(w)
 	)
 
+	encoder.SetEscapeHTML(false)
+
 	err := decoder.Decode(&body)
 	if err != nil {
 		failWithHistoryError(err, encoder)
